@@ -8,7 +8,9 @@ import Transactions from "./pages/Transactions";
 import Income from "./pages/Income";
 import Expense from "./pages/Expense";
 import Analytics from "./pages/Analytics";
+import Accounts from "./pages/Accounts";
 
+// components
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 
@@ -36,6 +38,16 @@ const App = () => {
           <ProtectedRoute>
             <AppLayout>
               <Transactions />
+            </AppLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/accounts" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Accounts />
             </AppLayout>
           </ProtectedRoute>
         }

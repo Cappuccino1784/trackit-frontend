@@ -1,8 +1,10 @@
 import api from "./api";
 
 interface TransactionPayload {
+  accountId: string;
+  toAccountId?: string;
   amount: number;
-  type: "income" | "expense";
+  type: "income" | "expense" | "transfer";
   category: string;
   date: string;
   description?: string;

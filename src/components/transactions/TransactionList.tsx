@@ -20,14 +20,26 @@ import { getAllTransactions, deleteTransaction } from "../../services/transactio
 
 interface Transaction {
   _id: string;
+  accountId: {
+    _id: string;
+    name: string;
+  };
+  toAccountId?: {
+    _id: string;
+    name: string;
+  };
   amount: number;
-  type: "income" | "expense";
+  type: "income" | "expense" | "transfer";
   category: string;
   date: string;
   description?: string;
 }
 
-const TransactionList = () => {
+interface Props {
+  refreshTrigger?: number;
+}
+
+const TransactionList = ({ refreshTrigger }: Props) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -47,7 +59,7 @@ const TransactionList = () => {
 
   useEffect(() => {
     fetchTransactions();
-  }, []);
+  }, [refreshTrigger]);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to delete this transaction?")) {
@@ -111,10 +123,11 @@ const TransactionList = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell><strong>Date</strong></TableCell>
+              <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}><strong>Date</strong></TableCell>
               <TableCell><strong>Category</strong></TableCell>
-              <TableCell><strong>Description</strong></TableCell>
-              <TableCell><strong>Type</strong></TableCell>
+              <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}><strong>Account</strong></TableCell>
+              <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}><strong>Description</strong></TableCell>
+              <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}><strong>Type</strong></TableCell>
               <TableCell align="right"><strong>Amount</strong></TableCell>
               <TableCell align="center"><strong>Actions</strong></TableCell>
             </TableRow>
@@ -122,15 +135,25 @@ const TransactionList = () => {
           <TableBody>
             {transactions.map((transaction) => (
               <TableRow key={transaction._id} hover>
-                <TableCell>{formatDate(transaction.date)}</TableCell>
-                <TableCell>{transaction.category}</TableCell>
+                <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>{formatDate(transaction.date)}</TableCell>
                 <TableCell>
+                  <Typography fontWeight="medium">{transaction.category}</Typography>
+                  <Typography variant="caption" color="text.secondary" sx={{ display: { xs: "block", sm: "none" } }}>
+                    {formatDate(transaction.date)}
+                  </Typography>
+                </TableCell>
+                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
+                  {transaction.type === "transfer" 
+                    ? `${transaction.accountId?.name || "N/A"} → ${transaction.toAccountId?.name || "N/A"}`
+                    : transaction.accountId?.name || "N/A"}
+                </TableCell>
+                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
                   {transaction.description || <em>No description</em>}
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
                   <Chip
                     label={transaction.type}
-                    color={transaction.type === "income" ? "success" : "error"}
+                    color={transaction.type === "income" ? "success" : transaction.type === "expense" ? "error" : "info"}
                     size="small"
                   />
                 </TableCell>
@@ -138,9 +161,17 @@ const TransactionList = () => {
                   <Typography
                     color={transaction.type === "income" ? "success.main" : "error.main"}
                     fontWeight="bold"
+                    fontSize={{ xs: "0.9rem", sm: "1rem" }}
                   >
                     {transaction.type === "income" ? "+" : "-"}
                     {formatAmount(transaction.amount)}
+                  </Typography>
+                  <Typography variant="caption" sx={{ display: { xs: "block", sm: "none" } }}>
+                    <Chip
+                      label={transaction.type}
+                      color={transaction.type === "income" ? "success" : transaction.type === "expense" ? "error" : "info"}
+                      size="small"
+                    />
                   </Typography>
                 </TableCell>
                 <TableCell align="center">

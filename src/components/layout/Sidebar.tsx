@@ -30,6 +30,10 @@ const Sidebar = ({ drawerWidth }: Props) => {
           <ListItemText primary="Dashboard" />
         </ListItemButton>
 
+        <ListItemButton component={NavLink} to="/accounts">
+          <ListItemText primary="Accounts" />
+        </ListItemButton>
+
         <ListItemButton component={NavLink} to="/transactions">
           <ListItemText primary="Transactions" />
         </ListItemButton>

@@ -1,8 +1,18 @@
-import { TextField, Button } from "@mui/material";
+import { 
+  TextField, 
+  Button, 
+  Box, 
+  Container, 
+  Paper, 
+  Typography, 
+  Alert,
+  Link 
+} from "@mui/material";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { loginRequest } from "../services/auth.service";
 import { useAuth } from "../context/AuthContext";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,49 +40,77 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-sm p-8">
+    <Box
+      sx={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: "grey.100",
+      }}
+    >
+      <Container maxWidth="sm">
+        <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
+          <Box display="flex" flexDirection="column" alignItems="center" mb={3}>
+            <AccountBalanceWalletIcon sx={{ fontSize: 48, color: "primary.main", mb: 2 }} />
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+              Expense Tracker
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Welcome back! Please login to your account
+            </Typography>
+          </Box>
 
-        <h1 className="text-2xl font-bold text-center mb-6">
-          Welcome back
-        </h1>
+          <Box component="form" onSubmit={handleSubmit}>
+            <TextField
+              label="Email"
+              type="email"
+              fullWidth
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              margin="normal"
+            />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <TextField
-            label="Email"
-            type="email"
-            fullWidth
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+            <TextField
+              label="Password"
+              type="password"
+              fullWidth
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              margin="normal"
+            />
 
-          <TextField
-            label="Password"
-            type="password"
-            fullWidth
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
 
-          {error && (
-            <p className="text-sm text-red-500 text-center">
-              {error}
-            </p>
-          )}
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              size="large"
+              disabled={loading}
+              sx={{ mt: 3, mb: 2 }}
+            >
+              {loading ? "Logging in..." : "Log in"}
+            </Button>
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            size="large"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Log in"}
-          </Button>
-        </form>
-
-      </div>
-    </div>
+            <Box textAlign="center">
+              <Typography variant="body2" color="text.secondary">
+                Don't have an account?{" "}
+                <Link component={RouterLink} to="/signup" underline="hover">
+                  Sign up
+                </Link>
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 };
 
