@@ -1,10 +1,12 @@
-import { Box, Typography, Stack } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import { useState } from "react";
 import TransactionForm from "../components/transactions/TransactionForm";
 import TransactionList from "../components/transactions/TransactionList";
+import AddIcon from "@mui/icons-material/Add";
 
 const Transactions = () => {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const handleTransactionAdded = () => {
     setRefreshTrigger(prev => prev + 1);
@@ -12,21 +14,27 @@ const Transactions = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4, fontWeight: 600 }}>
-        Transactions
-      </Typography>
-      <Stack 
-        direction={{ xs: "column", md: "row" }} 
-        spacing={3}
-        alignItems="flex-start"
-      >
-        <Box sx={{ width: { xs: "100%", md: "33%" } }}>
-          <TransactionForm onTransactionAdded={handleTransactionAdded} />
-        </Box>
-        <Box sx={{ width: { xs: "100%", md: "67%" } }}>
-          <TransactionList refreshTrigger={refreshTrigger} />
-        </Box>
-      </Stack>
+      <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+          Transactions
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setDrawerOpen(true)}
+          size="large"
+        >
+          Add Transaction
+        </Button>
+      </Box>
+
+      <TransactionList refreshTrigger={refreshTrigger} />
+      
+      <TransactionForm 
+        onTransactionAdded={handleTransactionAdded}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
     </Box>
   );
 };

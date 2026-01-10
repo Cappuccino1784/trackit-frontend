@@ -3,20 +3,21 @@ import {
   TextField,
   Button,
   MenuItem,
-  Paper,
+  Drawer,
   Typography,
-  Collapse,
   IconButton,
   Alert,
+  Divider,
 } from "@mui/material";
 import { useState, useEffect } from "react";
 import { createTransaction } from "../../services/transaction.service";
 import { getAllAccounts } from "../../services/account.service";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface Props {
   onTransactionAdded?: () => void;
+  open: boolean;
+  onClose: () => void;
 }
 
 interface Account {
@@ -26,7 +27,7 @@ interface Account {
   currency: string;
 }
 
-const TransactionForm = ({ onTransactionAdded }: Props) => {
+const TransactionForm = ({ onTransactionAdded, open, onClose }: Props) => {
   const [accountId, setAccountId] = useState("");
   const [toAccountId, setToAccountId] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -38,7 +39,6 @@ const TransactionForm = ({ onTransactionAdded }: Props) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
     fetchAccounts();
@@ -104,6 +104,11 @@ const TransactionForm = ({ onTransactionAdded }: Props) => {
       if (onTransactionAdded) {
         onTransactionAdded();
       }
+      
+      // Close drawer on success
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to create transaction");
     } finally {
@@ -112,17 +117,26 @@ const TransactionForm = ({ onTransactionAdded }: Props) => {
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 4, maxWidth: 600, mx: "auto" }}>
-      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 0 }}>
-          Add New Transaction
-        </Typography>
-        <IconButton onClick={() => setIsExpanded(!isExpanded)}>
-          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
-      </Box>
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: { width: { xs: "100%", sm: 500 } }
+      }}
+    >
+      <Box sx={{ p: 3, height: "100%", overflow: "auto" }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
+          <Typography variant="h5">
+            Add New Transaction
+          </Typography>
+          <IconButton onClick={onClose} edge="end">
+            <CloseIcon />
+          </IconButton>
+        </Box>
 
-      <Collapse in={isExpanded}>
+        <Divider sx={{ mb: 3 }} />
+
         <Box component="form" onSubmit={handleSubmit}>          {accounts.length === 0 && (
             <Alert severity="warning" sx={{ mb: 2 }}>
               Please create an account first before adding transactions.
@@ -246,8 +260,8 @@ const TransactionForm = ({ onTransactionAdded }: Props) => {
           {loading ? "Creating..." : "Create Transaction"}
         </Button>
         </Box>
-      </Collapse>
-    </Paper>
+      </Box>
+    </Drawer>
   );
 };
 

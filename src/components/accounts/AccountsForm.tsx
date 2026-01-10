@@ -3,28 +3,28 @@ import {
   TextField,
   Button,
   MenuItem,
-  Paper,
+  Drawer,
   Typography,
-  Collapse,
   IconButton,
+  Divider,
 } from "@mui/material";
 import { useState } from "react";
 import { createAccount } from "../../services/account.service";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import CloseIcon from "@mui/icons-material/Close";
 
 interface Props {
   onAccountAdded?: () => void;
+  open: boolean;
+  onClose: () => void;
 }
 
-const AccountsForm = ({ onAccountAdded }: Props) => {
+const AccountsForm = ({ onAccountAdded, open, onClose }: Props) => {
   const [name, setName] = useState("");
   const [balance, setBalance] = useState("");
   const [currency, setCurrency] = useState("USD");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [isExpanded, setIsExpanded] = useState(true);
 
   const currencies = [
     { value: "USD", label: "USD - US Dollar" },
@@ -63,6 +63,11 @@ const AccountsForm = ({ onAccountAdded }: Props) => {
       if (onAccountAdded) {
         onAccountAdded();
       }
+      
+      // Close drawer on success
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to create account");
     } finally {
@@ -71,17 +76,26 @@ const AccountsForm = ({ onAccountAdded }: Props) => {
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 4 }}>
-      <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 0 }}>
-          Add New Account
-        </Typography>
-        <IconButton onClick={() => setIsExpanded(!isExpanded)}>
-          {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-        </IconButton>
-      </Box>
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: { width: { xs: "100%", sm: 400 } }
+      }}
+    >
+      <Box sx={{ p: 3 }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
+          <Typography variant="h5">
+            Add New Account
+          </Typography>
+          <IconButton onClick={onClose} edge="end">
+            <CloseIcon />
+          </IconButton>
+        </Box>
 
-      <Collapse in={isExpanded}>
+        <Divider sx={{ mb: 3 }} />
+
         <Box component="form" onSubmit={handleSubmit}>
         <TextField
           label="Account Name"
@@ -141,8 +155,8 @@ const AccountsForm = ({ onAccountAdded }: Props) => {
           {loading ? "Creating..." : "Create Account"}
         </Button>
         </Box>
-      </Collapse>
-    </Paper>
+      </Box>
+    </Drawer>
   );
 };
 

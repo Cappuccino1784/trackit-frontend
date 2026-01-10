@@ -9,18 +9,21 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Chip,
   IconButton,
   CircularProgress,
   Alert,
   Card,
   CardContent,
-  Grid,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@mui/material";
+import type { SelectChangeEvent } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import { getAllAccounts, deleteAccount } from "../../services/account.service";
+import { getCurrencyRates, getSupportedCurrencies } from "../../services/currency.service";
 
 interface Account {
   _id: string;
@@ -37,6 +40,10 @@ const AccountsList = ({ refreshTrigger }: Props) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [displayCurrency, setDisplayCurrency] = useState("USD");
+  const [currencyRates, setCurrencyRates] = useState<Record<string, number>>({});
+  const [supportedCurrencies, setSupportedCurrencies] = useState<string[]>([]);
+  const [ratesLoading, setRatesLoading] = useState(false);
 
   const fetchAccounts = async () => {
     try {
@@ -51,8 +58,27 @@ const AccountsList = ({ refreshTrigger }: Props) => {
     }
   };
 
+  const fetchCurrencyData = async () => {
+    try {
+      setRatesLoading(true);
+      const [rates, currencies] = await Promise.all([
+        getCurrencyRates(),
+        getSupportedCurrencies(),
+      ]);
+      setCurrencyRates(rates.rates);
+      setSupportedCurrencies(currencies);
+    } catch (err: any) {
+      console.error("Failed to load currency data:", err);
+      // Set default currencies if API fails
+      setSupportedCurrencies(["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "CNY", "INR"]);
+    } finally {
+      setRatesLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAccounts();
+    fetchCurrencyData();
   }, [refreshTrigger]);
 
   const handleDelete = async (id: string) => {
@@ -75,8 +101,26 @@ const AccountsList = ({ refreshTrigger }: Props) => {
     }).format(amount);
   };
 
+  const convertAmount = (amount: number, fromCurrency: string, toCurrency: string): number => {
+    if (fromCurrency === toCurrency) return amount;
+    
+    const fromRate = currencyRates[fromCurrency] || 1;
+    const toRate = currencyRates[toCurrency] || 1;
+    
+    // Convert: amount in fromCurrency -> USD -> toCurrency
+    const amountInUSD = amount / fromRate;
+    return amountInUSD * toRate;
+  };
+
   const getTotalBalance = () => {
-    return accounts.reduce((sum, account) => sum + account.balance, 0);
+    return accounts.reduce((sum, account) => {
+      const convertedBalance = convertAmount(account.balance, account.currency, displayCurrency);
+      return sum + convertedBalance;
+    }, 0);
+  };
+
+  const handleCurrencyChange = (event: SelectChangeEvent<string>) => {
+    setDisplayCurrency(event.target.value);
   };
 
   if (loading) {
@@ -105,6 +149,26 @@ const AccountsList = ({ refreshTrigger }: Props) => {
 
   return (
     <Box>
+      {/* Currency Selector */}
+      <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 2 }}>
+        <Typography variant="body2" color="text.secondary">
+          Display Currency:
+        </Typography>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <Select
+            value={displayCurrency}
+            onChange={handleCurrencyChange}
+            disabled={ratesLoading}
+          >
+            {supportedCurrencies.map((currency) => (
+              <MenuItem key={currency} value={currency}>
+                {currency}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+      </Box>
+
       {/* Summary Card */}
       <Card sx={{ mb: 3, background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)", color: "white" }}>
         <CardContent>
@@ -114,7 +178,7 @@ const AccountsList = ({ refreshTrigger }: Props) => {
                 Total Balance
               </Typography>
               <Typography variant="h4" fontWeight="bold">
-                {formatAmount(getTotalBalance())}
+                {formatAmount(getTotalBalance(), displayCurrency)}
               </Typography>
               <Typography variant="body2" sx={{ mt: 1, opacity: 0.9 }}>
                 Across {accounts.length} account{accounts.length !== 1 ? "s" : ""}
@@ -135,7 +199,6 @@ const AccountsList = ({ refreshTrigger }: Props) => {
             <TableRow>
               <TableCell><strong>Account Name</strong></TableCell>
               <TableCell align="right"><strong>Balance</strong></TableCell>
-              <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}><strong>Currency</strong></TableCell>
               <TableCell align="center"><strong>Actions</strong></TableCell>
             </TableRow>
           </TableHead>
@@ -151,14 +214,13 @@ const AccountsList = ({ refreshTrigger }: Props) => {
                     fontWeight="bold"
                     fontSize={{ xs: "0.9rem", sm: "1.1rem" }}
                   >
-                    {formatAmount(account.balance, account.currency)}
+                    {formatAmount(convertAmount(account.balance, account.currency, displayCurrency), displayCurrency)}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: { xs: "block", md: "none" } }}>
-                    {account.currency}
+                  <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                    {account.balance !== convertAmount(account.balance, account.currency, displayCurrency) && 
+                      `Original: ${formatAmount(account.balance, account.currency)}`
+                    }
                   </Typography>
-                </TableCell>
-                <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-                  <Typography variant="body2">{account.currency}</Typography>
                 </TableCell>
                 <TableCell align="center">
                   <IconButton size="small" color="primary">
