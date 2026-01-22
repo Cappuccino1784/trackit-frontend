@@ -28,7 +28,7 @@ const Navbar = () => {
     >
       <Toolbar>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Expense Tracker
+          TrackIt
         </Typography>
 
         <Box display="flex" alignItems="center" gap={2}>

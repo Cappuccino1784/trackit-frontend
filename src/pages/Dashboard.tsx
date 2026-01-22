@@ -14,7 +14,7 @@ import TrendingDownIcon from "@mui/icons-material/TrendingDown";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { getAllTransactions } from "../services/transaction.service";
 import { getCurrencyRates, getSupportedCurrencies } from "../services/currency.service";
-import TimeFilter, { FilterType } from "../components/common/TimeFilter";
+import TimeFilter, { type FilterType } from "../components/common/TimeFilter";
 import CurrencySelector from "../components/common/CurrencySelector";
 
 interface Transaction {
